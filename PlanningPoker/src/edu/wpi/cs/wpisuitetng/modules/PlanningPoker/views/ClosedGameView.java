@@ -116,6 +116,7 @@ public class ClosedGameView extends JPanel {
 				.addListSelectionListener(new ListSelectionListener() {
 					@Override
 					public void valueChanged(ListSelectionEvent ev) {
+						Average = 0; // Quick fix for putting mean value in
 						System.out.println("***The listener has been activated***");
 						final JList list;
 						list = (JList) ev.getSource();
@@ -212,6 +213,7 @@ public class ClosedGameView extends JPanel {
 							previousID = currentID;
 						}
 						
+
 						if(!ConfigManager.getConfig().getUserName().equals(game.getModerator())){
 							submitButton.setEnabled(false);
 							submitButton.setToolTipText(null);
@@ -220,6 +222,7 @@ public class ClosedGameView extends JPanel {
 						}
 						else if(!game.isArchived()){
 							submitButton.setEnabled(true);
+							submitButton.setText("Submit");
 							// Add tooltips
 							submitButton.setToolTipText("Update this estimate in the Requirement Manager");
 						}
@@ -233,7 +236,9 @@ public class ClosedGameView extends JPanel {
 		
 		final DefaultListModel<String> model = new DefaultListModel<String>();
 		for (Requirement r : requirements) {
-			model.addElement(r.getName());
+			if(r!= null) {
+				model.addElement(r.getName());
+			}
 		}
 		
 		requirementListRenderer = new RequirementVoteIconRenderer(requirements, finalEsts);
@@ -254,7 +259,7 @@ public class ClosedGameView extends JPanel {
 			updateButton.setEnabled(false);
 		}
 		if(game.isArchived()) {
-			updateButton.setEnabled(false);
+			updateButton.setEnabled(true);
 			submitButton.setEnabled(false);
 			estimateNumberBox.setEnabled(false);
 		}
@@ -291,7 +296,7 @@ public class ClosedGameView extends JPanel {
 	
 	private void enableUpdateButton(PlanningPokerFinalEstimate[] finalEsts) {
 		if(game.isArchived()) {
-			updateButton.setEnabled(false);
+			updateButton.setEnabled(true);
 			submitButton.setEnabled(false);
 			estimateNumberBox.setEnabled(false);
 		}
@@ -316,7 +321,7 @@ public class ClosedGameView extends JPanel {
 					updateButton.setEnabled(gameHasEstimates);
 				}
 				else {
-					updateButton.setEnabled(false);
+					
 					break;
 				}
 			}
@@ -706,8 +711,9 @@ public class ClosedGameView extends JPanel {
 		submitButton = new JButton("Submit");
 		updateButton = new JButton("Open Final Estimate Updater");
 		updateButton.setFont(new java.awt.Font("Tahoma", 0, 28));
+		updateButton.setEnabled(true);
 		if(game.isArchived()) {
-			submitButton.setEnabled(false);
+			submitButton.setEnabled(true);
 			estimateNumberBox.setEnabled(false);
 		}
 		updateButton.addActionListener(new ActionListener() {
@@ -739,7 +745,6 @@ public class ClosedGameView extends JPanel {
 				FinalEstimateView.open(game);
 			}
 		});
-		updateButton.setEnabled(false);
 		
 		final javax.swing.GroupLayout estimateSubmitPanelLayout = new javax.swing.GroupLayout(
 				estimateSubmitPanel);

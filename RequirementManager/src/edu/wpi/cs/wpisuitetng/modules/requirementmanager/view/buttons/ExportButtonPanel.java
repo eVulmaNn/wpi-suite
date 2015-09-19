@@ -7,7 +7,6 @@
  ******************************************************************************/
 package edu.wpi.cs.wpisuitetng.modules.requirementmanager.view.buttons;
 
-import java.awt.Dimension;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -21,15 +20,13 @@ import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 import edu.wpi.cs.wpisuitetng.janeway.config.ConfigManager;
 import edu.wpi.cs.wpisuitetng.janeway.gui.container.toolbar.ToolbarGroupView;
 import edu.wpi.cs.wpisuitetng.modules.requirementmanager.controller.AddRequirementController;
 import edu.wpi.cs.wpisuitetng.modules.requirementmanager.controller.GetRequirementsController;
-import edu.wpi.cs.wpisuitetng.modules.requirementmanager.controller.UpdateRequirementController;
 import edu.wpi.cs.wpisuitetng.modules.requirementmanager.models.Requirement;
-import edu.wpi.cs.wpisuitetng.modules.requirementmanager.models.RequirementEntityManager;
-import edu.wpi.cs.wpisuitetng.modules.requirementmanager.models.RequirementModel;
 import edu.wpi.cs.wpisuitetng.modules.requirementmanager.models.characteristics.RequirementPriority;
 import edu.wpi.cs.wpisuitetng.modules.requirementmanager.models.characteristics.RequirementStatus;
 import edu.wpi.cs.wpisuitetng.modules.requirementmanager.models.characteristics.Transaction;
@@ -37,7 +34,6 @@ import edu.wpi.cs.wpisuitetng.modules.requirementmanager.models.characteristics.
 import edu.wpi.cs.wpisuitetng.modules.requirementmanager.view.Exporter;
 import edu.wpi.cs.wpisuitetng.modules.requirementmanager.view.Importer;
 import edu.wpi.cs.wpisuitetng.modules.requirementmanager.view.ViewEventController;
-import edu.wpi.cs.wpisuitetng.modules.requirementmanager.view.iterations.IterationRequirements;
 
 /**
  * @author Benjamin
@@ -45,7 +41,7 @@ import edu.wpi.cs.wpisuitetng.modules.requirementmanager.view.iterations.Iterati
  */
 public class ExportButtonPanel extends ToolbarGroupView {
 	// initialize the main view toolbar buttons	
-	private final JButton exportButton = new JButton("<html>Export Requirements</html>");
+	private final static JButton exportButton = new JButton("<html>Export Requirements</html>");
 	private final JButton importButton = new JButton("<html>Import Requirements</html>");
 	private final JPanel contentPanel = new JPanel();
 		
@@ -59,6 +55,7 @@ public class ExportButtonPanel extends ToolbarGroupView {
 			//this.createButton.setPreferredSize(new Dimension(200, 200));
 			this.exportButton.setHorizontalAlignment(SwingConstants.CENTER);
 			this.importButton.setHorizontalAlignment(SwingConstants.CENTER);
+			this.exportButton.setEnabled(false);
 			
 			/**
 			 * Exports the list of selected requirements to a file when btnExport is
@@ -78,13 +75,18 @@ public class ExportButtonPanel extends ToolbarGroupView {
 					//lm.addElement((Requirement)ViewEventController.getInstance().getOverviewTable().getValueAt(ViewEventController.getInstance().getOverviewTable().getSelectedRow(),1));
 					//Create a file chooser
 					final JFileChooser fc = new JFileChooser();
+					fc.setFileFilter(new FileNameExtensionFilter("JSON file", "json"));
 					//In response to a button click:
 					int returnVal = fc.showSaveDialog(contentPanel);
 					if (returnVal == JFileChooser.APPROVE_OPTION) {
+						String savePath = fc.getSelectedFile().getAbsolutePath();
+						if(!savePath.endsWith(".json")) {
+							savePath += ".json";
+						}
 						// Create exporter
 						Exporter ex = new Exporter();
 						// Export requirements
-						ex.exportAsJSON(lm, fc.getSelectedFile().getAbsolutePath());
+						ex.exportAsJSON(lm, savePath);
 						System.out.println("Exported all selected requirements\n");
 					}
 				}
@@ -92,7 +94,8 @@ public class ExportButtonPanel extends ToolbarGroupView {
 			
 			try {
 			    Image img = ImageIO.read(getClass().getResource("export.png"));
-			    importButton.setIcon(new ImageIcon(img));			    
+			    importButton.setIcon(new ImageIcon(img));
+			    importButton.setToolTipText("Import requirements from a file");
 			} catch (IOException ex) {}
 			
 			/**
@@ -105,6 +108,7 @@ public class ExportButtonPanel extends ToolbarGroupView {
 					String str;
 					//Create a file chooser
 					final JFileChooser fc = new JFileChooser();
+					fc.setFileFilter(new FileNameExtensionFilter("JSON file", "json"));
 					//In response to a button click:
 					int returnVal = fc.showOpenDialog(contentPanel);
 					if (returnVal == JFileChooser.APPROVE_OPTION) {
@@ -173,7 +177,8 @@ public class ExportButtonPanel extends ToolbarGroupView {
 			
 			try {
 			    Image img = ImageIO.read(getClass().getResource("import.png"));
-			    exportButton.setIcon(new ImageIcon(img));			    
+			    exportButton.setIcon(new ImageIcon(img));	
+			    exportButton.setToolTipText("Select requirements to export them to a file");
 			} catch (IOException ex) {}
 			
 			contentPanel.add(importButton);
@@ -188,10 +193,19 @@ public class ExportButtonPanel extends ToolbarGroupView {
 		
 		 * @return JButton Returns the export button
 		 */
-		public JButton getExportButton() {
+		public static JButton getExportButton() {
 			return exportButton;
 		}
 
+		/**
+		 * Enable / Disable the export button
+		 *
+		 * @param input true: enable the button, false: disable the button
+		 */
+		public static void setExportButtonEnabled(boolean input) {
+			exportButton.setEnabled(input);
+		}
+		
 		/**
 		 * Method getImportButton.
 		

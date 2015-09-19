@@ -115,9 +115,18 @@ public class PlanningPokerGame extends RegularAbstractModel<PlanningPokerGame> {
 	public List<Requirement> getRequirements() {
 
 		// Make sure requirements have been loaded from the database.
+		// Need to make this wait rather than potentially infinite-loop! - Ryan
 		GetRequirementsController.getInstance().retrieveRequirements();
-		while (RequirementModel.getInstance().getRequirements().size() < 1
-				|| RequirementModel.getInstance().getRequirements().get(0) == null) {
+		for(int i = 0; i < 1000; i++) {
+			try {
+				Thread.sleep(3);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			if (RequirementModel.getInstance().getRequirements().size() > 1
+					|| RequirementModel.getInstance().getRequirements().get(0) == null) {
+				break;
+			}
 		}
 
 		final List<Requirement> toReturn = new ArrayList<Requirement>();

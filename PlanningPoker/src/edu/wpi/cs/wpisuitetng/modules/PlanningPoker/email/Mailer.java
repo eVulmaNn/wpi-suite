@@ -70,7 +70,7 @@ public class Mailer {
 				transport = session.getTransport("smtp");
 			}
 			// release
-			final String from = "struct.by.lightning@gmail.com";
+			final String from = "struct.by.lightning.noreply@gmail.com";
 
 			// set the message to be from struct by lightning
 			message.setFrom(new InternetAddress(from));
@@ -174,15 +174,12 @@ public class Mailer {
 			text += "You can now view the results in Janeway!";
 		}
 
-		System.out.println(subject);
-		System.out.println(text);
-
 		try {
 			// testing
 			transport = session.getTransport("smtp");
 
 			// release
-			final String from = "struct.by.lightning@gmail.com";
+			final String from = "struct.by.lightning.noreply@gmail.com";
 
 			// set the message to be from struct by lightning
 			message.setFrom(new InternetAddress(from));
@@ -257,7 +254,7 @@ public class Mailer {
 			transport = session.getTransport("smtp");
 
 			// release
-			final String from = "struct.by.lightning@gmail.com";
+			final String from = "struct.by.lightning.noreply@gmail.com";
 
 			// set the message to be from struct by lightning
 			message.setFrom(new InternetAddress(from));
@@ -393,7 +390,7 @@ public class Mailer {
 			props.put("mail.smtp.port", "587");
 			props.put("mail.smtp.starttls.enable", "true");
 			props.put("mail.transport.protocol", "smtp");
-			props.put("mail.smtp.user", "struct.by.lightning@gmail.com");
+			props.put("mail.smtp.user", "struct.by.lightning.noreply@gmail.com");
 			props.put("mail.smtp.password", "Donthackthis!12358");
 		}
 
@@ -413,7 +410,7 @@ public class Mailer {
 					transport.connect(host, login, pass);
 				} else
 					transport.connect("smtp.gmail.com",
-							"struct.by.lightning@gmail.com",
+							"struct.by.lightning.noreply@gmail.com",
 							"Donthackthis!12358");
 
 				// send the message

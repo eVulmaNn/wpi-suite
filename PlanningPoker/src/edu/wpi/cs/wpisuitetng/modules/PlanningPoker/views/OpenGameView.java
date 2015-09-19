@@ -9,9 +9,13 @@
  ******************************************************************************/
 package edu.wpi.cs.wpisuitetng.modules.PlanningPoker.views;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -38,6 +42,8 @@ import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.PlainDocument;
 
+import com.sun.awt.AWTUtilities;
+
 import edu.wpi.cs.wpisuitetng.janeway.config.ConfigManager;
 import edu.wpi.cs.wpisuitetng.modules.PlanningPoker.controller.AddPlanningPokerVoteController;
 import edu.wpi.cs.wpisuitetng.modules.PlanningPoker.controller.GetPlanningPokerGamesController;
@@ -62,9 +68,11 @@ import edu.wpi.cs.wpisuitetng.modules.requirementmanager.models.Requirement;
 @SuppressWarnings("serial")
 public class OpenGameView extends JPanel {
 	private LinkedList<PlanningPokerVote> allVotes;
+	private PlanningPokerVote[] realAllVotes;
 	private String username;
 
-	DefaultListModel<String> usersVotedListModel = new DefaultListModel<String>();
+	ArrayList<DefaultListModel<String>> usersVotedListModel;
+	private int selectedRequirement = 0;
 
 	// TODO: The transition from this screen to the overview tab appears to be
 	// the only one which doesn't refresh the tree properly.
@@ -141,7 +149,6 @@ public class OpenGameView extends JPanel {
 	// instant messenger
 	private InstantMessenger im;
 	private RequirementVoteIconRenderer requirementListRenderer;
-	private static boolean hasOpenedOnce = false;
 
 	/**
 	 * Constructor runs NetBeans generated UI initialization code and then
@@ -165,10 +172,10 @@ public class OpenGameView extends JPanel {
 		// Fill components with data from the planning poker game.
 		initForGame();
 
-		if (!hasOpenedOnce) {
+		/*if (!hasOpenedOnce) {
 			estimateNumberLabel.setText("?");
 			hasOpenedOnce = true;
-		}
+		}*/
 
 		if (!game.getDeckType().equals("No Deck")) {
 			submitButton.setEnabled(false);
@@ -177,6 +184,8 @@ public class OpenGameView extends JPanel {
 		if (!game.getDeckType().equals("No Deck")) {
 			submitButton.setEnabled(false);
 		}
+
+		initUsers();
 	}
 
 	/**
@@ -234,6 +243,63 @@ public class OpenGameView extends JPanel {
 	}
 
 	/**
+	 * Create a list of lists of users that have voted for each requirement
+	 */
+	private void initUsers() {
+		usersVotedListModel = new ArrayList<DefaultListModel<String>>(requirements.size());
+		for (int i = 0; i < requirements.size(); i++) {
+			usersVotedListModel.add(new DefaultListModel<String>());
+			
+			Requirement r = requirements.get(i);
+			System.err.println("Adding requirement " + r.getName() + " at index " + i);
+
+			for (PlanningPokerVote v : realAllVotes) {
+				System.err.println("Vote for requirement " + v.getRequirementID() + " in " + v.getGameName());
+				System.err.println("Real Game Name: " + game.getGameName());
+				System.err.println("Real Req ID: " +r.getId());
+				if (v.getGameName().equals(game.getGameName())
+						&& v.getRequirementID() == r.getId()) {
+					DefaultListModel<String> temp = usersVotedListModel.get(i);
+					if (!temp.contains(v.getUserName()))
+						temp.addElement(v.getUserName());
+					usersVotedListModel.set(i, temp);
+					System.err.println("Added " + v.getUserName());
+				}
+			}
+		}
+	}
+
+	/**
+	 * Adds a username to the list of usernames who have voted on the
+	 * requirement with the given index
+	 * 
+	 * @param username
+	 *            the username of the user who has voted
+	 * @param selectedIndex
+	 *            the index of the requirement
+	 */
+	private void addUserName(String username, int selectedIndex) {
+		DefaultListModel<String> temp = usersVotedListModel.get(selectedIndex);
+		if (!temp.contains(username))
+			temp.addElement(username);
+		usersVotedListModel.set(selectedIndex, temp);
+		refreshUsers(selectedIndex);
+	}
+
+	/**
+	 * Switches the scroll pane to display the votes for the selected
+	 * requirements.
+	 * 
+	 * @param selectedIndex
+	 *            the index of the requirement
+	 */
+	private void refreshUsers(int selectedIndex) {
+		System.err.println("Switching to userList " + selectedIndex);
+		alreadyVotedList.clearSelection();
+		alreadyVotedList.setModel(usersVotedListModel.get(selectedIndex));
+	}
+
+	/**
 	 * Populates the allCardsPanel with one card and JTextArea for the user to
 	 * enter the estimation manually
 	 */
@@ -247,13 +313,22 @@ public class OpenGameView extends JPanel {
 		final Font bigFont = new Font(null, Font.PLAIN, 32);
 		textArea.setFont(bigFont);
 
-		textArea.setBorder(BorderFactory.createLineBorder(Color.black, 1));
+		textArea.setBorder(BorderFactory.createLineBorder(Color.black, 2));
 		textArea.setColumns(2);
 		textArea.setRows(1);
+		
+		JPanel card = new CardImgPanel();
+		
+		card.setPreferredSize(new Dimension(120, 170));
+		card.setBorder(javax.swing.BorderFactory
+				.createLineBorder(new java.awt.Color(153, 153, 153)));
 
-		allCardsPanel.add(textArea, gridBagConstraints);
-
-		allCardsPanel.setBackground(new Color(232, 232, 232));
+		card.setLayout(new GridBagLayout());
+		GridBagConstraints gbc = new GridBagConstraints();
+		card.add(textArea, gbc);
+		
+		card.repaint();
+		allCardsPanel.add(card, gridBagConstraints);
 	}
 
 	/**
@@ -366,6 +441,8 @@ public class OpenGameView extends JPanel {
 
 		// initialize users from server
 		initComponentLogic();
+		// set up the users who have voted
+		initUsers();
 
 		// Listener which updates the requirement displayed based on what is
 		// selected in the tree.
@@ -376,8 +453,8 @@ public class OpenGameView extends JPanel {
 			public void valueChanged(ListSelectionEvent ev) {
 				final JList list;
 				list = (JList) ev.getSource();
-				final Requirement selected = requirements.get(list
-						.getSelectedIndex());
+				selectedRequirement = list.getSelectedIndex();
+				final Requirement selected = requirements.get(selectedRequirement);
 				currentlySelectedRequirement = selected;
 				requirementNameLabel.setText(selected.getName());
 				requirementDescriptionLabel.setText(selected.getDescription());
@@ -389,6 +466,8 @@ public class OpenGameView extends JPanel {
 				final String strVote = vote > 0 ? ((Integer) vote).toString()
 						: "?";
 
+				refreshUsers(selectedRequirement);
+
 				System.out.println("Retrieved vote: " + vote + ": " + strVote);
 				estimateNumberLabel.setText(strVote);
 				submitButton.setEnabled(false);
@@ -399,9 +478,13 @@ public class OpenGameView extends JPanel {
 								requirements.get(
 										requirementList.getSelectedIndex())
 										.getId());
-
+				
 				if (voteNumber != Integer.MIN_VALUE) {
 					estimateNumberLabel.setText("" + voteNumber);
+				}
+				
+				if (voteNumber == -1) {
+					estimateNumberLabel.setText("?");
 				}
 
 				for (PlayingCardJPanel card : cards) {
@@ -414,7 +497,6 @@ public class OpenGameView extends JPanel {
 				if (game.getDeckType().equals("No Deck")) {
 					textArea.setText("");
 				}
-
 			}
 		});
 
@@ -985,6 +1067,8 @@ public class OpenGameView extends JPanel {
 		allVotes = GetPlanningPokerVoteController.getInstance()
 				.retrievePlanningPokerVoteByGameAndUser(game.getGameName(),
 						username);
+		
+		realAllVotes = GetPlanningPokerVoteController.getInstance().retrievePlanningPokerVote();
 
 		submitButton.addActionListener(new ActionListener() {
 			@Override
@@ -1040,6 +1124,9 @@ public class OpenGameView extends JPanel {
 						// Check it!
 						requirementListRenderer.goCheck(requirementList
 								.getSelectedIndex());
+						
+						// add user to the list
+						addUserName(username, selectedRequirement);
 					} else { // the game has been closed by someone else
 						int n = 0;
 						if (game.hasEndDate()
